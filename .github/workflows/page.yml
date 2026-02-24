@@ -1,0 +1,187 @@
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  schedule:
+  # 每天的5点运行一次任务
+  - cron: '0 21 0 * *'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+env:
+  REPO_URL: "https://gitlab.torproject.org/tpo/core/arti"
+  APP_NAME: "arti"
+  DOCKER_IMAGE_NAME: "arti-docker"
+  BUILD_DIR: "/home/runner/source"
+  BIN_DIR: "/home/runner/bin"
+jobs:
+  buildall-amd64:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout current repository
+      uses: actions/checkout@main
+    - uses: actions/setup-go@main
+      with:
+        go-version: 'stable' 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@master
+    
+    - name: Clone Rust repository and build
+      run: |
+        	# 克隆目标仓库
+        	mkdir -p ${{ env.BUILD_DIR }}
+        	git clone ${{ env.REPO_URL }} ${{ env.BUILD_DIR }}
+        	
+        	# 创建输出目录
+        	mkdir -p ${{ env.BIN_DIR }}
+        	
+        	# 使用Docker构建Rust应用
+        	docker run --rm \
+        	  -v ${{ env.BUILD_DIR }}:/source \
+        	  -v ${{ env.BIN_DIR }}:/output \
+        	  -w /source \
+        	  -e PATH="/root/.cargo/bin:${PATH}" \
+        	  debian:latest \
+        	  bash -c "
+        	    apt update -y && \
+        	    apt install -y --no-install-recommends \
+        	    build-essential \
+        	    curl \
+        	    git \
+        	    libssl-dev \
+        	    ca-certificates \
+        	    pkg-config \
+        	    libsqlite3-dev \
+        	    && rm -rf /var/lib/apt/lists/* && \
+        	    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+        	    cargo build -p ${{ env.APP_NAME }} --release && \
+        	    cp /source/target/release/${{ env.APP_NAME }} /output/${{ env.APP_NAME }} && \
+        	    echo 'Build completed' && \
+        	    ls -la /output/
+        	  "
+        	
+        	# 检查构建是否成功
+        	if [ -f "${{ env.BIN_DIR }}/${{ env.APP_NAME }}" ]; then
+        	  echo "Build successful!"
+        	  ls -la ${{ env.BIN_DIR }}/
+        	else
+        	  echo "Build failed! Checking target directory..."
+        	  find ${{ env.BUILD_DIR }}/target/release -type f -executable | head -10
+        	  exit 1
+        	fi
+        
+    - name: 镜像仓库
+      run: |
+        	sudo chmod -R 777 /mnt
+        	echo ----------------
+        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird.git
+        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/webtunnel.git
+        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake.git
+        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/conjure.git
+        	echo ----------------
+        	df -h
+
+    - name: Building lyrebird
+      run: |
+        	  cd lyrebird
+        	  make build
+          
+    - name: Building webtunnel
+      run: |
+        	  cd webtunnel
+        	  cd main/client
+        	  go get
+        	  go build
+        	  cd ../server
+        	  go get
+        	  go build
+            - name: Building snowflake
+              run: |
+        	  cd snowflake
+        	  cd client
+        	  go get
+        	  go build
+            - name: Building conjure
+              run: |
+        	  cd conjure
+        	  cd client
+        	  go get
+        	  go build
+            - name: copy
+              run: |
+        	  cp ./lyrebird/lyrebird ~/bin/lyrebird
+        	  cp ./webtunnel/main/client/client ~/bin/webtunnel
+        	  cp ./snowflake/client/client ~/bin/snowflake
+        	  cp ./conjure/client/client ~/bin/conjure
+        	  cd bin
+            md5sum lyrebird webtunnel snowflake conjure arti >md5
+    - name: 打包 
+      #run: 7z a -mx=9 bin.7z ./bin/*
+      run: tar -cJvf bin.tar.xz ./bin/*
+    - name: httproot
+      run: |
+          mkdir httproot
+          #mv bin.7z
+          mv ./bin.tar.xz ./httproot/bin-amd64.tar.xz
+          md5sum httproot/bin-amd64.tar.xz >httproot/v.txt
+    - name: Setup Pages
+      uses: actions/configure-pages@main
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@main
+      with:
+        # Upload entire repository
+        path: 'httproot'
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@main
+
+    - name: Read last active date
+      id: read_date
+      run: |
+        if [ -f last-active.txt ]; then
+          last_date=$(cat last-active.txt)
+        else
+          # 如果文件不存在，则设置为一个很早的日期，确保触发首次提交
+          last_date="1970-01-01"
+        fi
+        echo "last_date=$last_date" >> $GITHUB_OUTPUT
+
+    - name: Calculate days since last update
+      id: calc_days
+      run: |
+        last_date="${{ steps.read_date.outputs.last_date }}"
+        current_date=$(date +%Y-%m-%d)
+          
+        # 将日期转换为秒级时间戳
+        last_seconds=$(date -d "$last_date" +%s)
+        current_seconds=$(date -d "$current_date" +%s)
+        # 计算天数差
+        diff_days=$(( (current_seconds - last_seconds) / 86400 ))
+        echo "diff_days=$diff_days" >> $GITHUB_OUTPUT
+        echo "current_date=$current_date" >> $GITHUB_OUTPUT
+
+    - name: Update last-active.txt if needed
+      if: steps.calc_days.outputs.diff_days >= 30
+      run: |
+          echo "${{ steps.calc_days.outputs.current_date }}" > last-active.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add last-active.txt
+          git commit -m "chore: update last active date [skip ci]"
+          git push
