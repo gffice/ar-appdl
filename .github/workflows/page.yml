@@ -106,23 +106,20 @@ jobs:
         cd main/client
         go get
         go build
-        cd ../server
-        go get
-        go build
-        - name: Building snowflake
-          run: |
+    - name: Building snowflake
+      run: |
         cd snowflake
         cd client
         go get
         go build
-        - name: Building conjure
-          run: |
+    - name: Building conjure
+      run: |
         cd conjure
         cd client
         go get
         go build
-        - name: copy
-          run: |
+    - name: copy
+      run: |
         cp ./lyrebird/lyrebird ~/bin/lyrebird
         cp ./webtunnel/main/client/client ~/bin/webtunnel
         cp ./snowflake/client/client ~/bin/snowflake
