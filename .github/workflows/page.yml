@@ -124,11 +124,11 @@ jobs:
         cp ./webtunnel/main/client/client ~/bin/webtunnel
         cp ./snowflake/client/client ~/bin/snowflake
         cp ./conjure/client/client ~/bin/conjure
-        cd bin
+        cd ~/bin
         md5sum lyrebird webtunnel snowflake conjure arti >md5
     - name: 打包 
       #run: 7z a -mx=9 bin.7z ./bin/*
-      run: tar -cJvf bin.tar.xz ./bin/*
+      run: tar -cJvf bin.tar.xz ~/bin/*
     - name: httproot
       run: |
         mkdir httproot
