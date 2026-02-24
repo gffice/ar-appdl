@@ -42,58 +42,58 @@ jobs:
     
     - name: Clone Rust repository and build
       run: |
-        	# 克隆目标仓库
-        	mkdir -p ${{ env.BUILD_DIR }}
-        	git clone ${{ env.REPO_URL }} ${{ env.BUILD_DIR }}
-        	
-        	# 创建输出目录
-        	mkdir -p ${{ env.BIN_DIR }}
-        	
-        	# 使用Docker构建Rust应用
-        	docker run --rm \
-        	  -v ${{ env.BUILD_DIR }}:/source \
-        	  -v ${{ env.BIN_DIR }}:/output \
-        	  -w /source \
-        	  -e PATH="/root/.cargo/bin:${PATH}" \
-        	  debian:latest \
-        	  bash -c "
-        	    apt update -y && \
-        	    apt install -y --no-install-recommends \
-        	    build-essential \
-        	    curl \
-        	    git \
-        	    libssl-dev \
-        	    ca-certificates \
-        	    pkg-config \
-        	    libsqlite3-dev \
-        	    && rm -rf /var/lib/apt/lists/* && \
-        	    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-        	    cargo build -p ${{ env.APP_NAME }} --release && \
-        	    cp /source/target/release/${{ env.APP_NAME }} /output/${{ env.APP_NAME }} && \
-        	    echo 'Build completed' && \
-        	    ls -la /output/
-        	  "
-        	
-        	# 检查构建是否成功
-        	if [ -f "${{ env.BIN_DIR }}/${{ env.APP_NAME }}" ]; then
-        	  echo "Build successful!"
-        	  ls -la ${{ env.BIN_DIR }}/
-        	else
-        	  echo "Build failed! Checking target directory..."
-        	  find ${{ env.BUILD_DIR }}/target/release -type f -executable | head -10
-        	  exit 1
-        	fi
+          	# 克隆目标仓库
+          	mkdir -p ${{ env.BUILD_DIR }}
+          	git clone ${{ env.REPO_URL }} ${{ env.BUILD_DIR }}
+          	
+          	# 创建输出目录
+          	mkdir -p ${{ env.BIN_DIR }}
+          	
+          	# 使用Docker构建Rust应用
+          	docker run --rm \
+          	  -v ${{ env.BUILD_DIR }}:/source \
+          	  -v ${{ env.BIN_DIR }}:/output \
+          	  -w /source \
+          	  -e PATH="/root/.cargo/bin:${PATH}" \
+          	  debian:latest \
+          	  bash -c "
+          	    apt update -y && \
+          	    apt install -y --no-install-recommends \
+          	    build-essential \
+          	    curl \
+          	    git \
+          	    libssl-dev \
+          	    ca-certificates \
+          	    pkg-config \
+          	    libsqlite3-dev \
+          	    && rm -rf /var/lib/apt/lists/* && \
+          	    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
+          	    cargo build -p ${{ env.APP_NAME }} --release && \
+          	    cp /source/target/release/${{ env.APP_NAME }} /output/${{ env.APP_NAME }} && \
+          	    echo 'Build completed' && \
+          	    ls -la /output/
+          	  "
+          	
+          	# 检查构建是否成功
+          	if [ -f "${{ env.BIN_DIR }}/${{ env.APP_NAME }}" ]; then
+          	  echo "Build successful!"
+          	  ls -la ${{ env.BIN_DIR }}/
+          	else
+          	  echo "Build failed! Checking target directory..."
+          	  find ${{ env.BUILD_DIR }}/target/release -type f -executable | head -10
+          	  exit 1
+          	fi
         
     - name: 镜像仓库
       run: |
-        	sudo chmod -R 777 /mnt
-        	echo ----------------
-        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird.git
-        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/webtunnel.git
-        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake.git
-        	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/conjure.git
-        	echo ----------------
-        	df -h
+          	sudo chmod -R 777 /mnt
+          	echo ----------------
+          	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/lyrebird.git
+          	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/webtunnel.git
+          	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/snowflake.git
+          	git clone https://gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/conjure.git
+          	echo ----------------
+          	df -h
 
     - name: Building lyrebird
       run: |
