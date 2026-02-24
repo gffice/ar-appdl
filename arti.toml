@@ -1,0 +1,35 @@
+
+[proxy]
+socks_listen = 9055
+[storage]
+cache_dir = "/home/[user]/arti/cache_dir"
+state_dir = "/home/[user]/arti/state_dir"
+[bridges]
+enabled = true
+bridges = '''
+
+'''
+[[bridges.transports]]
+protocols = ["obfs4"]
+path = "/home/[user]/arti/lyrebird"
+arguments = []
+run_on_startup = false
+[[bridges.transports]]
+protocols = ["webtunnel"]
+path = "/home/[user]/arti/webtunnel"
+arguments = []
+run_on_startup = false
+[[bridges.transports]]
+protocols = ["snowflake"]
+path = "/home/[user]/arti/snowflake"
+arguments = []
+run_on_startup = false
+[[bridges.transports]]
+protocols = ["conjure"]
+path = "/home/[user]/arti/conjure"
+arguments = []
+run_on_startup = false
+[channel]
+padding = "normal"
+[vanguards]
+mode = "full"
