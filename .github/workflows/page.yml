@@ -128,13 +128,15 @@ jobs:
         md5sum lyrebird webtunnel snowflake conjure arti >md5
     - name: 打包 
       #run: 7z a -mx=9 bin.7z ./bin/*
-      run: tar -cJvf bin.tar.xz ~/bin/*
+      run: |
+        cd ~
+        tar -cJvf bin.tar.xz ./bin/*
     - name: httproot
       run: |
         mkdir httproot
         #mv bin.7z
         mv ./bin.tar.xz ./httproot/bin-amd64.tar.xz
-        md5sum httproot/bin-amd64.tar.xz >httproot/v.txt
+        md5sum httproot/bin-amd64.tar.xz >httproot/md5.txt
     - name: Setup Pages
       uses: actions/configure-pages@main
 
