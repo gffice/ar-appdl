@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=arti
 WorkingDirectory=/opt/arti
-ExecStart=/opt/arti/arti -c arti.toml
+ExecStart=/opt/arti/arti proxy -c arti.toml
 ReadWritePaths=/opt/arti
 [Install]
 WantedBy=multi-user.target
