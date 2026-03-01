@@ -1,0 +1,14 @@
+[Unit]
+Description=Tor Arti Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=arti
+NoNewPrivileges=yes
+WorkingDirectory=/opt/arti
+ExecStart=/opt/arti/arti -c arti.toml
+ReadWritePaths=/opt/arti
+[Install]
+WantedBy=multi-user.target
