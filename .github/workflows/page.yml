@@ -135,7 +135,7 @@ jobs:
       run: |
         mkdir httproot
         #mv bin.7z
-        mv ./bin.tar.xz ./httproot/bin-amd64.tar.xz
+        mv ~/bin.tar.xz ./httproot/bin-amd64.tar.xz
         md5sum httproot/bin-amd64.tar.xz >httproot/md5.txt
     - name: Setup Pages
       uses: actions/configure-pages@main
